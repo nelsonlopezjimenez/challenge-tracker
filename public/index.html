@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Challenge Tracker</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- Setup screen: pick class -->
+  <div id="setup" class="container">
+    <div class="setup-screen">
+      <h1>🎓 Challenge Tracker</h1>
+      <h2>Select your class</h2>
+      <div class="class-buttons">
+        <button class="class-btn" onclick="selectClass('A')">Class A</button>
+        <button class="class-btn" onclick="selectClass('B')">Class B</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main screen: challenge list -->
+  <div id="main" class="container hidden">
+    <header>
+      <h1>🎓 Challenge Tracker</h1>
+      <p>Pick a challenge and start coding!</p>
+      <div style="margin-top: 0.75rem;">
+        <span class="id-badge">
+          🎭 Your ID: <span class="id-value" id="studentIdDisplay"></span>
+          &nbsp;·&nbsp; Class <span id="classDisplay"></span>
+        </span>
+      </div>
+    </header>
+
+    <!-- Personal progress -->
+    <div id="progressSection" class="progress-section hidden">
+      <h3 style="margin-bottom: 0.5rem;">Your Overall Progress</h3>
+      <div class="progress-bar-container">
+        <div id="personalBar" class="progress-bar-fill progress-green" style="width: 0%"></div>
+      </div>
+      <div id="progressMessage" class="message-box message-info" style="margin-top: 0.75rem;"></div>
+    </div>
+
+    <!-- Challenge list -->
+    <h3 style="margin-bottom: 0.75rem;">Available Challenges</h3>
+    <div id="challengeList" class="challenge-list">
+      <p style="color: var(--text-muted);">Loading challenges...</p>
+    </div>
+  </div>
+
+<script>
+  // ─── Anonymous ID generation ───────────────────────────────
+  const nouns = [
+    'fox','star','pixel','wolf','moon','comet','spark','hawk','raven',
+    'tiger','panda','otter','eagle','lynx','viper','phoenix','dragon',
+    'falcon','panther','cobra','atlas','nova','orbit','quasar','bolt'
+  ];
+
+  function generateId() {
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const num = Math.floor(Math.random() * 90) + 10;
+    return `${noun}-${num}`;
+  }
+
+  // ─── State ─────────────────────────────────────────────────
+  let studentId = localStorage.getItem('ct-student-id');
+  let className = localStorage.getItem('ct-class');
+
+  // ─── Init ──────────────────────────────────────────────────
+  if (studentId && className) {
+    showMain();
+  }
+
+  function selectClass(cls) {
+    className = cls;
+    localStorage.setItem('ct-class', cls);
+
+    if (!studentId) {
+      studentId = generateId();
+      localStorage.setItem('ct-student-id', studentId);
+    }
+
+    showMain();
+  }
+
+  async function showMain() {
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('main').classList.remove('hidden');
+    document.getElementById('studentIdDisplay').textContent = studentId;
+    document.getElementById('classDisplay').textContent = className;
+
+    await loadChallenges();
+    await loadProgress();
+  }
+
+  // ─── Load challenges ──────────────────────────────────────
+  async function loadChallenges() {
+    const list = document.getElementById('challengeList');
+    try {
+      const res = await fetch('/api/challenges');
+      const challenges = await res.json();
+
+      // Get personal progress to show status
+      const progRes = await fetch(`/api/progress/${className}/${studentId}`);
+      const progress = await progRes.json();
+
+      if (challenges.length === 0) {
+        list.innerHTML = '<p style="color: var(--text-muted);">No challenges yet. Check back soon!</p>';
+        return;
+      }
+
+      list.innerHTML = challenges.map(ch => {
+        const result = progress.history[ch.id];
+        let statusHtml = '<span class="status status-new">New</span>';
+
+        if (result) {
+          const pct = Math.round((result.passed / result.total) * 100);
+          if (pct === 100) {
+            statusHtml = `<span class="status status-complete">✓ ${result.passed}/${result.total}</span>`;
+          } else {
+            statusHtml = `<span class="status status-partial">${result.passed}/${result.total}</span>`;
+          }
+        }
+
+        return `
+          <a class="challenge-item" href="/challenge.html?day=${ch.id}">
+            <span>${ch.title}</span>
+            ${statusHtml}
+          </a>
+        `;
+      }).join('');
+    } catch (err) {
+      list.innerHTML = '<p style="color: var(--red);">Error loading challenges</p>';
+    }
+  }
+
+  // ─── Load personal progress ────────────────────────────────
+  async function loadProgress() {
+    try {
+      const res = await fetch(`/api/progress/${className}/${studentId}`);
+      const { history, message } = await res.json();
+
+      const days = Object.keys(history);
+      if (days.length === 0) return;
+
+      const section = document.getElementById('progressSection');
+      section.classList.remove('hidden');
+
+      const totalPassed = Object.values(history).reduce((s, e) => s + e.passed, 0);
+      const totalTests = Object.values(history).reduce((s, e) => s + e.total, 0);
+      const pct = Math.round((totalPassed / totalTests) * 100);
+
+      const bar = document.getElementById('personalBar');
+      bar.style.width = `${pct}%`;
+      bar.textContent = `${pct}%`;
+      bar.className = `progress-bar-fill ${pct >= 70 ? 'progress-green' : pct >= 40 ? 'progress-yellow' : 'progress-red'}`;
+
+      document.getElementById('progressMessage').textContent = message;
+    } catch (err) {
+      // Silently fail
+    }
+  }
+</script>
+</body>
+</html>

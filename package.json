@@ -1,0 +1,16 @@
+{
+  "name": "challenge-tracker",
+  "version": "1.0.0",
+  "description": "Classroom JavaScript challenge tracker with Jasmine testing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "codemirror": "^5.65.21",
+    "express": "^4.22.1",
+    "jasmine-core": "^6.1.0"
+  }
+}

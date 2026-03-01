@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Challenge Tracker</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/lib/chartjs/chart.umd.js"></script>
+</head>
+<body>
+
+  <div class="container wide">
+    <div class="dashboard-header">
+      <div>
+        <h1>📊 Class Dashboard</h1>
+        <p id="lastUpdated" style="color: var(--text-muted); font-size: 0.85rem;">Loading...</p>
+      </div>
+      <div class="class-toggle">
+        <button id="toggleA" class="active" onclick="switchClass('A')">Class A</button>
+        <button id="toggleB" onclick="switchClass('B')">Class B</button>
+      </div>
+    </div>
+
+    <!-- Class message -->
+    <div id="classMessage" class="message-box message-info"></div>
+
+    <!-- Stats cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statStudents" style="color: var(--blue);">0</div>
+        <div class="stat-label">Active Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statAvg" style="color: var(--green);">0%</div>
+        <div class="stat-label">Latest Day Average</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statDays" style="color: var(--accent);">0</div>
+        <div class="stat-label">Challenges Available</div>
+      </div>
+    </div>
+
+    <!-- Tier bar -->
+    <div class="card">
+      <h3 style="margin-bottom: 0.75rem;">Student Distribution</h3>
+      <div class="tier-bar" id="tierBar"></div>
+      <div class="tier-legend">
+        <div class="tier-legend-item">
+          <span class="tier-dot" style="background: var(--green);"></span>
+          <span>All passed (100%)</span>
+          <strong id="tierPerfectCount">0</strong>
+        </div>
+        <div class="tier-legend-item">
+          <span class="tier-dot" style="background: var(--blue);"></span>
+          <span>Above 75%</span>
+          <strong id="tierAbove75Count">0</strong>
+        </div>
+        <div class="tier-legend-item">
+          <span class="tier-dot" style="background: var(--yellow);"></span>
+          <span>Above 50%</span>
+          <strong id="tierAbove50Count">0</strong>
+        </div>
+        <div class="tier-legend-item">
+          <span class="tier-dot" style="background: var(--red);"></span>
+          <span>Below 50%</span>
+          <strong id="tierBelow50Count">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart: daily averages -->
+    <div class="chart-container">
+      <h3 style="margin-bottom: 1rem;">Daily Class Average</h3>
+      <canvas id="dailyChart" height="300"></canvas>
+    </div>
+
+    <!-- Chart: per-day submission count -->
+    <div class="chart-container" style="margin-top: 1rem;">
+      <h3 style="margin-bottom: 1rem;">Submissions per Challenge</h3>
+      <canvas id="submissionChart" height="250"></canvas>
+    </div>
+  </div>
+
+<script>
+  let currentClass = 'A';
+  let dailyChart = null;
+  let submissionChart = null;
+  const REFRESH_INTERVAL = 30000; // 30 seconds
+
+  // ─── Chart.js global config for dark theme ─────────────────
+  Chart.defaults.color = '#9595b0';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+  // ─── Switch class ──────────────────────────────────────────
+  function switchClass(cls) {
+    currentClass = cls;
+    document.getElementById('toggleA').classList.toggle('active', cls === 'A');
+    document.getElementById('toggleB').classList.toggle('active', cls === 'B');
+    loadDashboard();
+  }
+
+  // ─── Load dashboard data ──────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`/api/dashboard/${currentClass}`);
+      const data = await res.json();
+
+      // Update timestamp
+      document.getElementById('lastUpdated').textContent =
+        `Last updated: ${new Date().toLocaleTimeString()}  ·  Auto-refreshes every 30s`;
+
+      // Class message
+      const msgEl = document.getElementById('classMessage');
+      msgEl.textContent = data.classMessage;
+      msgEl.className = `message-box ${
+        data.totalStudents === 0 ? 'message-neutral' : 'message-info'
+      }`;
+
+      // Stats cards
+      document.getElementById('statStudents').textContent = data.totalStudents;
+
+      const dayKeys = Object.keys(data.days).sort();
+      const latestAvg = dayKeys.length > 0
+        ? data.days[dayKeys[dayKeys.length - 1]].avgPercent
+        : 0;
+      document.getElementById('statAvg').textContent = `${latestAvg}%`;
+      document.getElementById('statDays').textContent = dayKeys.length;
+
+      // Tiers
+      renderTiers(data.tiers, data.totalStudents);
+
+      // Charts
+      renderDailyChart(data.days);
+      renderSubmissionChart(data.days);
+
+    } catch (err) {
+      document.getElementById('classMessage').textContent = 'Error loading dashboard data';
+      document.getElementById('classMessage').className = 'message-box message-warning';
+    }
+  }
+
+  // ─── Render tier bar ──────────────────────────────────────
+  function renderTiers(tiers, total) {
+    const bar = document.getElementById('tierBar');
+
+    if (total === 0) {
+      bar.innerHTML = `<div class="tier-segment" style="width: 100%; background: var(--bg-card); color: var(--text-muted);">
+        <span>No submissions yet</span>
+      </div>`;
+      ['tierPerfectCount','tierAbove75Count','tierAbove50Count','tierBelow50Count']
+        .forEach(id => document.getElementById(id).textContent = '0');
+      return;
+    }
+
+    const segments = [
+      { count: tiers.perfect, color: 'var(--green)', label: tiers.perfect },
+      { count: tiers.above75, color: 'var(--blue)', label: tiers.above75 },
+      { count: tiers.above50, color: 'var(--yellow)', label: tiers.above50 },
+      { count: tiers.below50, color: 'var(--red)', label: tiers.below50 }
+    ];
+
+    bar.innerHTML = segments
+      .filter(s => s.count > 0)
+      .map(s => {
+        const pct = (s.count / total * 100);
+        return `<div class="tier-segment" style="width: ${pct}%; background: ${s.color};">
+          ${pct > 12 ? `<span>${s.count}</span>` : ''}
+        </div>`;
+      }).join('');
+
+    document.getElementById('tierPerfectCount').textContent = tiers.perfect;
+    document.getElementById('tierAbove75Count').textContent = tiers.above75;
+    document.getElementById('tierAbove50Count').textContent = tiers.above50;
+    document.getElementById('tierBelow50Count').textContent = tiers.below50;
+  }
+
+  // ─── Daily average chart ──────────────────────────────────
+  function renderDailyChart(days) {
+    const ctx = document.getElementById('dailyChart');
+    const dayKeys = Object.keys(days).sort();
+    const labels = dayKeys.map(d => d.replace('day-', 'Day ').replace(/-/g, ' '));
+    const values = dayKeys.map(d => days[d].avgPercent);
+
+    if (dailyChart) dailyChart.destroy();
+
+    dailyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Class Average %',
+          data: values,
+          backgroundColor: values.map(v =>
+            v >= 70 ? 'rgba(74, 222, 128, 0.7)' :
+            v >= 40 ? 'rgba(250, 204, 21, 0.7)' :
+            'rgba(248, 113, 113, 0.7)'
+          ),
+          borderColor: values.map(v =>
+            v >= 70 ? '#4ade80' :
+            v >= 40 ? '#facc15' :
+            '#f87171'
+          ),
+          borderWidth: 1,
+          borderRadius: 6,
+          maxBarThickness: 60
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: { callback: v => v + '%' }
+          }
+        }
+      }
+    });
+  }
+
+  // ─── Submissions per day chart ─────────────────────────────
+  function renderSubmissionChart(days) {
+    const ctx = document.getElementById('submissionChart');
+    const dayKeys = Object.keys(days).sort();
+    const labels = dayKeys.map(d => d.replace('day-', 'Day ').replace(/-/g, ' '));
+    const values = dayKeys.map(d => days[d].submissions);
+
+    if (submissionChart) submissionChart.destroy();
+
+    submissionChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Submissions',
+          data: values,
+          borderColor: '#6c63ff',
+          backgroundColor: 'rgba(108, 99, 255, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: '#6c63ff',
+          pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    });
+  }
+
+  // ─── Auto refresh ──────────────────────────────────────────
+  loadDashboard();
+  setInterval(loadDashboard, REFRESH_INTERVAL);
+</script>
+</body>
+</html>
