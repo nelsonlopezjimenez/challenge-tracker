@@ -72,3 +72,36 @@ describe('Challenge 6: appendToString', function () {
     expect(appendToString('other test', '')).toBe('other test');
   });
 });
+describe('Challenge 7: charAt', function () {
+  it('returns a character at position string', function() {
+    expect(charAt('awesome', 2)).toBe('e');
+    expect(charAt('awesome', 12)).toBe('');
+  });
+});
+describe('Challenge 8: isAlt', function () {
+  it('returns a boolean whether the vowels and consonant are alternate', function() {
+    expect(isAlt('amazon')).toBe(true); // true
+    expect(isAlt('apple' )).toBe(false); // false
+    expect(isAlt('banana')).toBe(true); // true
+  });
+});
+describe('Challenge 9: removeVowels', function () {
+  it('return a new string with all the vowels removed. ', function() {
+    expect(removeVowels('Hello!')).toBe("Hll!")
+    expect(removeVowels('Tomatoes')).toBe("Tmts")
+    expect(removeVowels('Reverse Vowels In The String')).toBe("Rvrs Vwls n Th Strng")
+    expect(removeVowels('aeiou')).toBe("")
+    expect(removeVowels('why try, shy fly?')).toBe("why try, shy fly?")
+  });
+});
+describe('Challenge 10: removeFromString', function () {
+  it('The function should return a new string with the characters removed.', function() {
+    expect(removeFromString('Elie', 2, 2)).toBe('El')
+    expect(removeFromString('Elie', 0, 1)).toBe('lie')
+    expect(removeFromString('Rithm School', 0, 6)).toBe('School')
+    expect(removeFromString('Rithm School', 2, 4)).toBe('RiSchool')
+    expect(removeFromString('Rithm School', 6, 400)).toBe('Rithm ')
+  });
+});
+
+

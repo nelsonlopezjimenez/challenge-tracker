@@ -232,10 +232,25 @@ app.get('/api/dashboard/:className', (req, res) => {
 });
 
 // ─── Start server ────────────────────────────────────────────
+const os = require('os');
+
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
 app.listen(PORT, '0.0.0.0', () => {
+  const ip = getLocalIP();
   console.log(`\n  🎓 Challenge Tracker running at:`);
   console.log(`     Local:   http://localhost:${PORT}`);
-  console.log(`     Network: http://192.168.0.110:${PORT}\n`);
-  console.log(`  📊 Dashboard: http://localhost:${PORT}/dashboard.html\n`);
+  console.log(`     Network: http://${ip}:${PORT}\n`);
+  console.log(`  📊 Dashboard: http://${ip}:${PORT}/dashboard.html\n`);
   ensureDataDir();
 });

@@ -33,3 +33,24 @@ function getFullName(first, last) {
 function appendToString(first, second) {
   // your code here
 }
+// ─── Challenge 7 ─────────────────────────────────────────────
+// Return the character in str at position index
+function charAt(str, index) {
+  // your code here
+}
+// ─── Challenge 8 ─────────────────────────────────────────────
+// Returns a boolean whether vowels (a, e, i, o, u) and consonants are in alternate
+function isAlt(str) {
+  // your code here
+}
+// ─── Challenge 9 ─────────────────────────────────────────────
+// It will accept a string and return a new string with all the vowels removed. You should not consider "y" to be a vowel.
+function removeVowels(str) {
+  // your code here
+}
+// ─── Challenge 10 ─────────────────────────────────────────────
+// Write a function called removeFromString, which accepts a string, a starting index (number) and a number of characters to remove.
+// The function should return a new string with the characters removed.
+function removeFromString(str, index) {
+  // your code here
+}
