@@ -20,3 +20,38 @@ With `function greet()` this would work due to hoisting. With `const greet =` it
 
 So no code changes needed. If anything, it's a feature for your course.
 
+No problem. Nested functions are scoped inside their parent — they work as expected:
+
+```javascript
+function greet(name) {
+  function capitalize(str) {
+    return str[0].toUpperCase() + str.slice(1);
+  }
+  return `Hello, ${capitalize(name)}!`;
+}
+```
+
+The specs test `greet`, not `capitalize`. When `greet` runs, it finds `capitalize` in its own scope. Everything works.
+
+**Same with arrow functions nested inside:**
+
+```javascript
+const greet = (name) => {
+  const format = (s) => s.trim().toLowerCase();
+  return `Hello, ${format(name)}!`;
+};
+```
+
+Still fine — `format` lives inside `greet`'s closure.
+
+**The only scenario that would break** is if your spec directly tests a nested function by name:
+
+```javascript
+// spec
+it("should capitalize", () => {
+  expect(capitalize("ana")).toBe("Ana");  // ❌ capitalize is not defined
+});
+```
+
+But that's an instructor concern, not a student one. As long as your specs test the top-level functions listed in the template, students are free to create whatever helper functions they want inside them. That's actually good practice — encourage them to decompose problems.
+
