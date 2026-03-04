@@ -1,665 +1,892 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Challenge</title>
+    <link
+      rel="stylesheet"
+      href="/lib/codemirror/codemirror.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/lib/codemirror/theme/monokai.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/lib/jasmine/jasmine.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/css/styles.css"
+    />
+    <style>
+      /* Override Jasmine default styles to fit dark theme */
+      .jasmine_html-reporter {
+        display: none;
+      }
+    </style>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Challenge</title>
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/lib/codemirror/codemirror.css">
-  <link rel="stylesheet" href="/lib/codemirror/theme/monokai.css">
-  <link rel="stylesheet" href="/lib/jasmine/jasmine.css">
-  <style>
-    /* Override Jasmine default styles to fit dark theme */
-    .jasmine_html-reporter {
-      display: none;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="container wide">
-    <!-- Header -->
-    <div class="challenge-header">
-      <div>
-        <a href="/" style="font-size: 0.9rem;">← Back to challenges</a>
-        <h1 id="challengeTitle" style="margin-top: 0.5rem;">Loading...</h1>
-      </div>
-      <span class="id-badge">
-        🎭 <span class="id-value" id="studentIdDisplay"></span>
-      </span>
-    </div>
-
-    <!-- Instructions -->
-    <div id="instructions" class="instructions"></div>
-
-    <!-- Editor -->
-    <div class="editor-area">
-      <div class="editor-toolbar">
-        <label style="flex: 1;">Your Solution</label>
-        <button class="btn btn-outline" onclick="loadFile()" title="Load from VS Code">
-          📂 Load File
+  <body>
+    <div class="container wide">
+      <!-- Header -->
+      <div class="challenge-header">
+        <a
+          href="/"
+          style="font-size: 0.9rem"
+          >← Back to challenges</a
+        >
+        <h1
+          id="challengeTitle"
+          style="margin-top: 0.5rem"
+        >
+          Loading...
+        </h1>
+        <!-- Action buttons -->
+        <button
+          id="runBtn"
+          class="btn btn-primary"
+          onclick="runTests()"
+        >
+          ▶ Run Tests
         </button>
-        <button class="btn btn-outline" onclick="resetCode()" title="Reset to template">
-          🔄 Reset
+        <button
+          id="submitBtn"
+          class="btn btn-success hidden"
+          onclick="submitResults()"
+        >
+          📤 Submit Results
         </button>
-        <input type="file" id="fileInput" accept=".js" class="hidden">
-      </div>
-      <div id="editorContainer"></div>
-    </div>
 
-    <!-- Action buttons -->
-    <div class="action-bar">
-      <button id="runBtn" class="btn btn-primary" onclick="runTests()">
-        ▶ Run Tests
-      </button>
-      <button id="submitBtn" class="btn btn-success hidden" onclick="submitResults()">
-        📤 Submit Results
-      </button>
-    </div>
+        <!-- Immediate feedback message -->
+        <div
+          id="feedbackMessage"
+          class="message-box hidden"
+        ></div>
 
-    <!-- Immediate feedback message -->
-    <div id="feedbackMessage" class="message-box hidden"></div>
-
-    <!-- Test Results -->
-    <div id="resultsArea" class="results-area hidden">
-      <div class="results-summary">
-        <div class="results-count">
-          <span class="passed" id="passedCount">0</span>
-          <span class="sep">/</span>
-          <span id="totalCount">0</span>
+        <input
+          type="file"
+          id="fileInput"
+          accept=".js"
+          class="hidden"
+        />
+        <div id="headerBtns">
+          <button
+            class="btn btn-outline"
+            onclick="loadFile()"
+            title="Load from VS Code"
+          >
+            📂 Load File
+          </button>
+          <button
+            class="btn btn-outline"
+            onclick="resetCode()"
+            title="Reset to template"
+          >
+            🔄 Reset
+          </button>
         </div>
-        <div class="progress-bar-container" style="flex: 1; min-width: 200px;">
-          <div id="resultBar" class="progress-bar-fill progress-green" style="width: 0%"></div>
-        </div>
+        <span class="id-badge">
+          🎭
+          <span
+            class="id-value"
+            id="studentIdDisplay"
+          ></span>
+        </span>
       </div>
-      <div id="specResults" class="spec-results"></div>
+
+      <section id="instructions-editor">
+        <!-- Instructions -->
+        <div
+          id="instructions"
+          class="instructions"
+        ></div>
+
+        <!-- Editor -->
+        <div class="editor-area">
+          <div id="editorContainer"></div>
+        </div>
+      </section>
+
+      <!-- Test Results -->
+      <div
+        id="resultsArea"
+        class="results-area hidden"
+      >
+        <div class="results-summary">
+          <div class="results-count">
+            <span
+              class="passed"
+              id="passedCount"
+              >0</span
+            >
+            <span class="sep">/</span>
+            <span id="totalCount">0</span>
+          </div>
+          <div
+            class="progress-bar-container"
+            style="flex: 1; min-width: 200px"
+          >
+            <div
+              id="resultBar"
+              class="progress-bar-fill progress-green"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+        <div
+          id="specResults"
+          class="spec-results"
+        ></div>
+      </div>
+
+      <!-- Personal progress for this challenge -->
+      <div
+        id="personalProgress"
+        class="card hidden"
+        style="margin-top: 1.5rem"
+      >
+        <div
+          id="progressMessage"
+          class="message-box message-info"
+        ></div>
+      </div>
     </div>
 
-    <!-- Personal progress for this challenge -->
-    <div id="personalProgress" class="card hidden" style="margin-top: 1.5rem;">
-      <div id="progressMessage" class="message-box message-info"></div>
-    </div>
-  </div>
+    <!-- Scripts -->
+    <script src="/lib/jasmine/jasmine.js"></script>
+    <script src="/lib/codemirror/codemirror.js"></script>
+    <script src="/lib/codemirror/mode/javascript/javascript.js"></script>
+    <script src="/lib/codemirror/addon/edit/closebrackets.js"></script>
+    <script src="/lib/codemirror/addon/edit/matchbrackets.js"></script>
 
-  <!-- Scripts -->
-  <script src="/lib/jasmine/jasmine.js"></script>
-  <script src="/lib/codemirror/codemirror.js"></script>
-  <script src="/lib/codemirror/mode/javascript/javascript.js"></script>
-  <script src="/lib/codemirror/addon/edit/closebrackets.js"></script>
-  <script src="/lib/codemirror/addon/edit/matchbrackets.js"></script>
+    <script>
+      // ─── State ─────────────────────────────────────────────────
+      const params = new URLSearchParams(location.search);
+      const dayId = params.get('day');
+      const studentId = localStorage.getItem('ct-student-id');
+      const className = localStorage.getItem('ct-class');
 
-  <script>
-    // ─── State ─────────────────────────────────────────────────
-    const params = new URLSearchParams(location.search);
-    const dayId = params.get('day');
-    const studentId = localStorage.getItem('ct-student-id');
-    const className = localStorage.getItem('ct-class');
+      if (!studentId || !className) {
+        location.href = '/';
+      }
 
-    if (!studentId || !className) {
-      location.href = '/';
-    }
+      document.getElementById('studentIdDisplay').textContent = studentId;
 
-    document.getElementById('studentIdDisplay').textContent = studentId;
+      let editor;
+      let specCode = '';
+      let templateCode = '';
+      let lastResults = null;
 
-    let editor;
-    let specCode = '';
-    let templateCode = '';
-    let lastResults = null;
-
-    // ─── Init editor ───────────────────────────────────────────
-    function initEditor(code) {
-      editor = CodeMirror(document.getElementById('editorContainer'), {
-        value: code,
-        mode: 'javascript',
-        theme: 'monokai',
-        lineNumbers: true,
-        autoCloseBrackets: true,
-        matchBrackets: true,
-        tabSize: 2,
-        indentWithTabs: false,
-        lineWrapping: true,
-        viewportMargin: Infinity
-      });
-    }
-
-    // ─── Load challenge ────────────────────────────────────────
-    async function loadChallenge() {
-      try {
-        const res = await fetch(`/api/challenges/${dayId}`);
-        if (!res.ok) throw new Error('Challenge not found');
-        const data = await res.json();
-
-        specCode = data.spec;
-        templateCode = data.template;
-
-        // Set title from readme first line
-        const title = data.readme.split('\n')[0]?.replace(/^#+\s*/, '') || dayId;
-        document.getElementById('challengeTitle').textContent = title;
-        document.title = title;
-
-        // Render readme as simple HTML
-        document.getElementById('instructions').innerHTML = markdownToHtml(data.readme);
-
-        // Check if student has saved code for this challenge
-        const savedCode = localStorage.getItem(`ct-code-${dayId}`);
-        initEditor(savedCode || templateCode);
-
-        // Auto-save on changes
-        editor.on('change', () => {
-          localStorage.setItem(`ct-code-${dayId}`, editor.getValue());
+      // ─── Init editor ───────────────────────────────────────────
+      function initEditor(code) {
+        editor = CodeMirror(document.getElementById('editorContainer'), {
+          value: code,
+          mode: 'javascript',
+          theme: 'monokai',
+          lineNumbers: true,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          tabSize: 2,
+          indentWithTabs: false,
+          lineWrapping: true,
+          viewportMargin: Infinity,
         });
-      } catch (err) {
-        document.getElementById('challengeTitle').textContent = 'Challenge not found';
-        document.getElementById('instructions').innerHTML =
-          '<p>This challenge does not exist. <a href="/">Go back</a></p>';
       }
-    }
 
-    // ─── Simple markdown to HTML ───────────────────────────────
-    function markdownToHtml(md) {
-      return md
-        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-        .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/^- (.+)$/gm, '• $1<br>')
-        .replace(/\n\n/g, '<br><br>')
-        .replace(/\n/g, ' ');
-    }
-
-    // ─── Load file from disk (VS Code workflow) ────────────────
-    function loadFile() {
-      const input = document.getElementById('fileInput');
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          editor.setValue(ev.target.result);
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-    }
-
-    function resetCode() {
-      if (confirm('Reset to the original template? Your current code will be lost.')) {
-        editor.setValue(templateCode);
-        localStorage.removeItem(`ct-code-${dayId}`);
-      }
-    }
-
-    // ─── Run Jasmine tests ─────────────────────────────────────
-    function runTests() {
-      const runBtn = document.getElementById('runBtn');
-      runBtn.disabled = true;
-      runBtn.textContent = '⏳ Running...';
-
-      // Small delay so UI updates
-      setTimeout(() => {
+      // ─── Load challenge ────────────────────────────────────────
+      async function loadChallenge() {
         try {
-          executeTests();
+          const res = await fetch(`/api/challenges/${dayId}`);
+          if (!res.ok) throw new Error('Challenge not found');
+          const data = await res.json();
+
+          specCode = data.spec;
+          templateCode = data.template;
+
+          // Set title from readme first line
+          const title =
+            data.readme.split('\n')[0]?.replace(/^#+\s*/, '') || dayId;
+          document.getElementById('challengeTitle').textContent = title;
+          document.title = title;
+
+          // Render readme as simple HTML
+          document.getElementById('instructions').innerHTML = markdownToHtml(
+            data.readme
+          );
+
+          // Check if student has saved code for this challenge
+          const savedCode = localStorage.getItem(`ct-code-${dayId}`);
+          initEditor(savedCode || templateCode);
+
+          // Auto-save on changes
+          editor.on('change', () => {
+            localStorage.setItem(`ct-code-${dayId}`, editor.getValue());
+          });
         } catch (err) {
-          showFeedback(`Error: ${err.message}`, 'warning');
+          document.getElementById('challengeTitle').textContent =
+            'Challenge not found';
+          document.getElementById('instructions').innerHTML =
+            '<p>This challenge does not exist. <a href="/">Go back</a></p>';
         }
-        runBtn.disabled = false;
-        runBtn.textContent = '▶ Run Tests';
-      }, 100);
-    }
+      }
 
-    function executeTestsOld() {
-      const studentCode = editor.getValue();
-      const results = [];
-      let currentSuite = '';
+      // ─── Simple markdown to HTML ───────────────────────────────
+      function markdownToHtml(md) {
+        return md
+          .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+          .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+          .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+          .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/^- (.+)$/gm, '• $1<br>')
+          .replace(/\n\n/g, '<br><br>')
+          .replace(/\n/g, ' ');
+      }
 
-      // Create a sandboxed scope for student code + specs
-      // We use Function constructor to avoid polluting global scope too much
-      try {
-        // First, evaluate student code to extract functions
-        const studentFn = new Function(studentCode + '\n; return { ' + extractFunctionNames(studentCode).join(',') + ' };');
-        const studentFunctions = studentFn();
+      // ─── Load file from disk (VS Code workflow) ────────────────
+      function loadFile() {
+        const input = document.getElementById('fileInput');
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            editor.setValue(ev.target.result);
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      }
 
-        // Create a mini test runner
-        const suites = [];
-        let currentDescribe = null;
-
-        // Mock Jasmine API
-        function describe(name, fn) {
-          currentDescribe = { name, specs: [] };
-          suites.push(currentDescribe);
-          fn();
-          currentDescribe = null;
+      function resetCode() {
+        if (
+          confirm(
+            'Reset to the original template? Your current code will be lost.'
+          )
+        ) {
+          editor.setValue(templateCode);
+          localStorage.removeItem(`ct-code-${dayId}`);
         }
+      }
 
-        function it(name, fn) {
-          const spec = { name, passed: true, error: null };
+      // ─── Run Jasmine tests ─────────────────────────────────────
+      function runTests() {
+        const runBtn = document.getElementById('runBtn');
+        runBtn.disabled = true;
+        runBtn.textContent = '⏳ Running...';
+
+        // Small delay so UI updates
+        setTimeout(() => {
           try {
-            fn();
-          } catch (e) {
-            spec.passed = false;
-            spec.error = e.message;
+            executeTests();
+          } catch (err) {
+            showFeedback(`Error: ${err.message}`, 'warning');
           }
-          if (currentDescribe) {
-            currentDescribe.specs.push(spec);
-          }
-        }
-
-        function expect(actual) {
-          return {
-            toBe(expected) {
-              if (actual !== expected) {
-                throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
-              }
-            },
-            toEqual(expected) {
-              if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-                throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
-              }
-            },
-            toBeTruthy() {
-              if (!actual) throw new Error(`Expected truthy but got ${JSON.stringify(actual)}`);
-            },
-            toBeFalsy() {
-              if (actual) throw new Error(`Expected falsy but got ${JSON.stringify(actual)}`);
-            },
-            toBeGreaterThan(expected) {
-              if (!(actual > expected)) throw new Error(`Expected ${actual} to be greater than ${expected}`);
-            },
-            toBeLessThan(expected) {
-              if (!(actual < expected)) throw new Error(`Expected ${actual} to be less than ${expected}`);
-            },
-            toContain(expected) {
-              if (Array.isArray(actual)) {
-                if (!actual.includes(expected)) throw new Error(`Expected array to contain ${JSON.stringify(expected)}`);
-              } else if (typeof actual === 'string') {
-                if (!actual.includes(expected)) throw new Error(`Expected string to contain "${expected}"`);
-              }
-            },
-            toBeNull() {
-              if (actual !== null) throw new Error(`Expected null but got ${JSON.stringify(actual)}`);
-            },
-            toBeUndefined() {
-              if (actual !== undefined) throw new Error(`Expected undefined but got ${JSON.stringify(actual)}`);
-            },
-            toBeDefined() {
-              if (actual === undefined) throw new Error(`Expected value to be defined`);
-            },
-            toBeInstanceOf(expected) {
-              if (!(actual instanceof expected)) throw new Error(`Expected instance of ${expected.name}`);
-            },
-            toThrow() {
-              if (typeof actual !== 'function') throw new Error('Expected a function');
-              try {
-                actual();
-                throw new Error('Expected function to throw');
-              } catch (e) {
-                if (e.message === 'Expected function to throw') throw e;
-              }
-            },
-            toHaveLength(expected) {
-              if (actual.length !== expected) {
-                throw new Error(`Expected length ${expected} but got ${actual.length}`);
-              }
-            },
-            toBeCloseTo(expected, precision = 2) {
-              const pow = Math.pow(10, precision);
-              if (Math.round(actual * pow) !== Math.round(expected * pow)) {
-                throw new Error(`Expected ${actual} to be close to ${expected}`);
-              }
-            },
-            not: {
-              toBe(expected) {
-                if (actual === expected) throw new Error(`Expected ${JSON.stringify(actual)} not to be ${JSON.stringify(expected)}`);
-              },
-              toEqual(expected) {
-                if (JSON.stringify(actual) === JSON.stringify(expected)) {
-                  throw new Error(`Expected values not to be equal`);
-                }
-              },
-              toContain(expected) {
-                if (Array.isArray(actual) && actual.includes(expected)) {
-                  throw new Error(`Expected array not to contain ${JSON.stringify(expected)}`);
-                }
-                if (typeof actual === 'string' && actual.includes(expected)) {
-                  throw new Error(`Expected string not to contain "${expected}"`);
-                }
-              },
-              toBeNull() {
-                if (actual === null) throw new Error('Expected value not to be null');
-              },
-              toBeUndefined() {
-                if (actual === undefined) throw new Error('Expected value not to be undefined');
-              },
-              toBeTruthy() {
-                if (actual) throw new Error(`Expected falsy but got ${JSON.stringify(actual)}`);
-              },
-              toBeFalsy() {
-                if (!actual) throw new Error(`Expected truthy but got ${JSON.stringify(actual)}`);
-              }
-            }
-          };
-        }
-
-        // Build spec function with student functions + test API in scope
-        const fnNames = extractFunctionNames(studentCode);
-        const fnParams = [...fnNames, 'describe', 'it', 'expect'];
-        const fnArgs = [...fnNames.map(n => studentFunctions[n]), describe, it, expect];
-
-        const specFn = new Function(...fnParams, specCode);
-        specFn(...fnArgs);
-
-        // Collect results
-        let totalPassed = 0;
-        let totalSpecs = 0;
-
-        suites.forEach(suite => {
-          suite.specs.forEach(spec => {
-            totalSpecs++;
-            if (spec.passed) totalPassed++;
-            results.push({
-              suite: suite.name,
-              name: spec.name,
-              passed: spec.passed,
-              error: spec.error
-            });
-          });
-        });
-
-        lastResults = { passed: totalPassed, total: totalSpecs, specs: results };
-        displayResults(lastResults);
-
-      } catch (err) {
-        // If student code has syntax errors
-        showFeedback(`⚠️ Code error: ${err.message}`, 'warning');
-        lastResults = null;
-        document.getElementById('submitBtn').classList.add('hidden');
+          runBtn.disabled = false;
+          runBtn.textContent = '▶ Run Tests';
+        }, 100);
       }
-    }
 
-    // Extract function names defined in student code
-    // function extractFunctionNames(code) {
-    //   const names = [];
-    //   // Match: function name(, const/let/var name =, and arrow functions
-    //   const patterns = [
-    //     /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g,
-    //     /(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=/g  // commente out to be able to create new variables
-    //     // needs to match this:
-    //     // const myFnc = () =>{ }
-    //     // but not this:
-    //     // const myVar = "John"
-
-    //   ];
-    //   patterns.forEach(regex => {
-    //     let match;
-    //     while ((match = regex.exec(code)) !== null) {
-    //       if (!names.includes(match[1])) names.push(match[1]);
-    //     }
-    //   });
-    //   return names;
-    // }
-
-    function executeTests() {
-      const studentCode = editor.getValue();
-
-      try {
-        // Mini test runner
-        const suites = [];
-        let currentDescribe = null;
-
-        function describe(name, fn) {
-          currentDescribe = { name, specs: [] };
-          suites.push(currentDescribe);
-          fn();
-          currentDescribe = null;
-        }
-
-        function it(name, fn) {
-          const spec = { name, passed: true, error: null };
-          try { fn(); } catch (e) {
-            spec.passed = false;
-            spec.error = e.message;
-          }
-          if (currentDescribe) currentDescribe.specs.push(spec);
-        }
-
-        //function expect(actual) {
-        /* ... keep your existing expect implementation unchanged ... */
-        function expect(actual) {
-          return {
-            toBe(expected) {
-              if (actual !== expected) {
-                throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
-              }
-            },
-            toEqual(expected) {
-              if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-                throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
-              }
-            },
-            toBeTruthy() {
-              if (!actual) throw new Error(`Expected truthy but got ${JSON.stringify(actual)}`);
-            },
-            toBeFalsy() {
-              if (actual) throw new Error(`Expected falsy but got ${JSON.stringify(actual)}`);
-            },
-            toBeGreaterThan(expected) {
-              if (!(actual > expected)) throw new Error(`Expected ${actual} to be greater than ${expected}`);
-            },
-            toBeLessThan(expected) {
-              if (!(actual < expected)) throw new Error(`Expected ${actual} to be less than ${expected}`);
-            },
-            toContain(expected) {
-              if (Array.isArray(actual)) {
-                if (!actual.includes(expected)) throw new Error(`Expected array to contain ${JSON.stringify(expected)}`);
-              } else if (typeof actual === 'string') {
-                if (!actual.includes(expected)) throw new Error(`Expected string to contain "${expected}"`);
-              }
-            },
-            toBeNull() {
-              if (actual !== null) throw new Error(`Expected null but got ${JSON.stringify(actual)}`);
-            },
-            toBeUndefined() {
-              if (actual !== undefined) throw new Error(`Expected undefined but got ${JSON.stringify(actual)}`);
-            },
-            toBeDefined() {
-              if (actual === undefined) throw new Error(`Expected value to be defined`);
-            },
-            toBeInstanceOf(expected) {
-              if (!(actual instanceof expected)) throw new Error(`Expected instance of ${expected.name}`);
-            },
-            toThrow() {
-              if (typeof actual !== 'function') throw new Error('Expected a function');
-              try {
-                actual();
-                throw new Error('Expected function to throw');
-              } catch (e) {
-                if (e.message === 'Expected function to throw') throw e;
-              }
-            },
-            toHaveLength(expected) {
-              if (actual.length !== expected) {
-                throw new Error(`Expected length ${expected} but got ${actual.length}`);
-              }
-            },
-            toBeCloseTo(expected, precision = 2) {
-              const pow = Math.pow(10, precision);
-              if (Math.round(actual * pow) !== Math.round(expected * pow)) {
-                throw new Error(`Expected ${actual} to be close to ${expected}`);
-              }
-            },
-            not: {
-              toBe(expected) {
-                if (actual === expected) throw new Error(`Expected ${JSON.stringify(actual)} not to be ${JSON.stringify(expected)}`);
-              },
-              toEqual(expected) {
-                if (JSON.stringify(actual) === JSON.stringify(expected)) {
-                  throw new Error(`Expected values not to be equal`);
-                }
-              },
-              toContain(expected) {
-                if (Array.isArray(actual) && actual.includes(expected)) {
-                  throw new Error(`Expected array not to contain ${JSON.stringify(expected)}`);
-                }
-                if (typeof actual === 'string' && actual.includes(expected)) {
-                  throw new Error(`Expected string not to contain "${expected}"`);
-                }
-              },
-              toBeNull() {
-                if (actual === null) throw new Error('Expected value not to be null');
-              },
-              toBeUndefined() {
-                if (actual === undefined) throw new Error('Expected value not to be undefined');
-              },
-              toBeTruthy() {
-                if (actual) throw new Error(`Expected falsy but got ${JSON.stringify(actual)}`);
-              },
-              toBeFalsy() {
-                if (!actual) throw new Error(`Expected truthy but got ${JSON.stringify(actual)}`);
-              }
-            }
-          };
-        }
-
-
-
-        // Run student code + spec in one shared scope
-        const combined = studentCode + '\n;\n' + specCode;
-        const runner = new Function('describe', 'it', 'expect', combined);
-        runner(describe, it, expect);
-
-        // Collect results
-        let totalPassed = 0;
-        let totalSpecs = 0;
+      function executeTestsOld() {
+        const studentCode = editor.getValue();
         const results = [];
+        let currentSuite = '';
 
-        suites.forEach(suite => {
-          suite.specs.forEach(spec => {
-            totalSpecs++;
-            if (spec.passed) totalPassed++;
-            results.push({
-              suite: suite.name,
-              name: spec.name,
-              passed: spec.passed,
-              error: spec.error
+        // Create a sandboxed scope for student code + specs
+        // We use Function constructor to avoid polluting global scope too much
+        try {
+          // First, evaluate student code to extract functions
+          const studentFn = new Function(
+            studentCode +
+              '\n; return { ' +
+              extractFunctionNames(studentCode).join(',') +
+              ' };'
+          );
+          const studentFunctions = studentFn();
+
+          // Create a mini test runner
+          const suites = [];
+          let currentDescribe = null;
+
+          // Mock Jasmine API
+          function describe(name, fn) {
+            currentDescribe = { name, specs: [] };
+            suites.push(currentDescribe);
+            fn();
+            currentDescribe = null;
+          }
+
+          function it(name, fn) {
+            const spec = { name, passed: true, error: null };
+            try {
+              fn();
+            } catch (e) {
+              spec.passed = false;
+              spec.error = e.message;
+            }
+            if (currentDescribe) {
+              currentDescribe.specs.push(spec);
+            }
+          }
+
+          function expect(actual) {
+            return {
+              toBe(expected) {
+                if (actual !== expected) {
+                  throw new Error(
+                    `Expected ${JSON.stringify(
+                      expected
+                    )} but got ${JSON.stringify(actual)}`
+                  );
+                }
+              },
+              toEqual(expected) {
+                if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                  throw new Error(
+                    `Expected ${JSON.stringify(
+                      expected
+                    )} but got ${JSON.stringify(actual)}`
+                  );
+                }
+              },
+              toBeTruthy() {
+                if (!actual)
+                  throw new Error(
+                    `Expected truthy but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeFalsy() {
+                if (actual)
+                  throw new Error(
+                    `Expected falsy but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeGreaterThan(expected) {
+                if (!(actual > expected))
+                  throw new Error(
+                    `Expected ${actual} to be greater than ${expected}`
+                  );
+              },
+              toBeLessThan(expected) {
+                if (!(actual < expected))
+                  throw new Error(
+                    `Expected ${actual} to be less than ${expected}`
+                  );
+              },
+              toContain(expected) {
+                if (Array.isArray(actual)) {
+                  if (!actual.includes(expected))
+                    throw new Error(
+                      `Expected array to contain ${JSON.stringify(expected)}`
+                    );
+                } else if (typeof actual === 'string') {
+                  if (!actual.includes(expected))
+                    throw new Error(`Expected string to contain "${expected}"`);
+                }
+              },
+              toBeNull() {
+                if (actual !== null)
+                  throw new Error(
+                    `Expected null but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeUndefined() {
+                if (actual !== undefined)
+                  throw new Error(
+                    `Expected undefined but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeDefined() {
+                if (actual === undefined)
+                  throw new Error(`Expected value to be defined`);
+              },
+              toBeInstanceOf(expected) {
+                if (!(actual instanceof expected))
+                  throw new Error(`Expected instance of ${expected.name}`);
+              },
+              toThrow() {
+                if (typeof actual !== 'function')
+                  throw new Error('Expected a function');
+                try {
+                  actual();
+                  throw new Error('Expected function to throw');
+                } catch (e) {
+                  if (e.message === 'Expected function to throw') throw e;
+                }
+              },
+              toHaveLength(expected) {
+                if (actual.length !== expected) {
+                  throw new Error(
+                    `Expected length ${expected} but got ${actual.length}`
+                  );
+                }
+              },
+              toBeCloseTo(expected, precision = 2) {
+                const pow = Math.pow(10, precision);
+                if (Math.round(actual * pow) !== Math.round(expected * pow)) {
+                  throw new Error(
+                    `Expected ${actual} to be close to ${expected}`
+                  );
+                }
+              },
+              not: {
+                toBe(expected) {
+                  if (actual === expected)
+                    throw new Error(
+                      `Expected ${JSON.stringify(
+                        actual
+                      )} not to be ${JSON.stringify(expected)}`
+                    );
+                },
+                toEqual(expected) {
+                  if (JSON.stringify(actual) === JSON.stringify(expected)) {
+                    throw new Error(`Expected values not to be equal`);
+                  }
+                },
+                toContain(expected) {
+                  if (Array.isArray(actual) && actual.includes(expected)) {
+                    throw new Error(
+                      `Expected array not to contain ${JSON.stringify(
+                        expected
+                      )}`
+                    );
+                  }
+                  if (typeof actual === 'string' && actual.includes(expected)) {
+                    throw new Error(
+                      `Expected string not to contain "${expected}"`
+                    );
+                  }
+                },
+                toBeNull() {
+                  if (actual === null)
+                    throw new Error('Expected value not to be null');
+                },
+                toBeUndefined() {
+                  if (actual === undefined)
+                    throw new Error('Expected value not to be undefined');
+                },
+                toBeTruthy() {
+                  if (actual)
+                    throw new Error(
+                      `Expected falsy but got ${JSON.stringify(actual)}`
+                    );
+                },
+                toBeFalsy() {
+                  if (!actual)
+                    throw new Error(
+                      `Expected truthy but got ${JSON.stringify(actual)}`
+                    );
+                },
+              },
+            };
+          }
+
+          // Build spec function with student functions + test API in scope
+          const fnNames = extractFunctionNames(studentCode);
+          const fnParams = [...fnNames, 'describe', 'it', 'expect'];
+          const fnArgs = [
+            ...fnNames.map((n) => studentFunctions[n]),
+            describe,
+            it,
+            expect,
+          ];
+
+          const specFn = new Function(...fnParams, specCode);
+          specFn(...fnArgs);
+
+          // Collect results
+          let totalPassed = 0;
+          let totalSpecs = 0;
+
+          suites.forEach((suite) => {
+            suite.specs.forEach((spec) => {
+              totalSpecs++;
+              if (spec.passed) totalPassed++;
+              results.push({
+                suite: suite.name,
+                name: spec.name,
+                passed: spec.passed,
+                error: spec.error,
+              });
             });
           });
-        });
 
-        lastResults = { passed: totalPassed, total: totalSpecs, specs: results };
-        displayResults(lastResults);
-
-      } catch (err) {
-        showFeedback(`⚠️ Code error: ${err.message}`, 'warning');
-        lastResults = null;
-        document.getElementById('submitBtn').classList.add('hidden');
+          lastResults = {
+            passed: totalPassed,
+            total: totalSpecs,
+            specs: results,
+          };
+          displayResults(lastResults);
+        } catch (err) {
+          // If student code has syntax errors
+          showFeedback(`⚠️ Code error: ${err.message}`, 'warning');
+          lastResults = null;
+          document.getElementById('submitBtn').classList.add('hidden');
+        }
       }
-    }
-    // ─── Display results ──────────────────────────────────────
-    function displayResults({ passed, total, specs }) {
-      const area = document.getElementById('resultsArea');
-      area.classList.remove('hidden');
 
-      document.getElementById('passedCount').textContent = passed;
-      document.getElementById('totalCount').textContent = total;
+      // Extract function names defined in student code
+      // function extractFunctionNames(code) {
+      //   const names = [];
+      //   // Match: function name(, const/let/var name =, and arrow functions
+      //   const patterns = [
+      //     /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g,
+      //     /(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=/g  // commente out to be able to create new variables
+      //     // needs to match this:
+      //     // const myFnc = () =>{ }
+      //     // but not this:
+      //     // const myVar = "John"
 
-      const pct = total > 0 ? Math.round((passed / total) * 100) : 0;
-      const bar = document.getElementById('resultBar');
-      bar.style.width = `${pct}%`;
-      bar.textContent = `${pct}%`;
-      bar.className = `progress-bar-fill ${pct >= 70 ? 'progress-green' : pct >= 40 ? 'progress-yellow' : 'progress-red'}`;
+      //   ];
+      //   patterns.forEach(regex => {
+      //     let match;
+      //     while ((match = regex.exec(code)) !== null) {
+      //       if (!names.includes(match[1])) names.push(match[1]);
+      //     }
+      //   });
+      //   return names;
+      // }
 
-      // Individual spec results
-      const specEl = document.getElementById('specResults');
-      specEl.innerHTML = specs.map(s => {
-        if (s.passed) {
-          return `<div class="spec-result spec-pass">
+      function executeTests() {
+        const studentCode = editor.getValue();
+
+        try {
+          // Mini test runner
+          const suites = [];
+          let currentDescribe = null;
+
+          function describe(name, fn) {
+            currentDescribe = { name, specs: [] };
+            suites.push(currentDescribe);
+            fn();
+            currentDescribe = null;
+          }
+
+          function it(name, fn) {
+            const spec = { name, passed: true, error: null };
+            try {
+              fn();
+            } catch (e) {
+              spec.passed = false;
+              spec.error = e.message;
+            }
+            if (currentDescribe) currentDescribe.specs.push(spec);
+          }
+
+          //function expect(actual) {
+          /* ... keep your existing expect implementation unchanged ... */
+          function expect(actual) {
+            return {
+              toBe(expected) {
+                if (actual !== expected) {
+                  throw new Error(
+                    `Expected ${JSON.stringify(
+                      expected
+                    )} but got ${JSON.stringify(actual)}`
+                  );
+                }
+              },
+              toEqual(expected) {
+                if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                  throw new Error(
+                    `Expected ${JSON.stringify(
+                      expected
+                    )} but got ${JSON.stringify(actual)}`
+                  );
+                }
+              },
+              toBeTruthy() {
+                if (!actual)
+                  throw new Error(
+                    `Expected truthy but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeFalsy() {
+                if (actual)
+                  throw new Error(
+                    `Expected falsy but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeGreaterThan(expected) {
+                if (!(actual > expected))
+                  throw new Error(
+                    `Expected ${actual} to be greater than ${expected}`
+                  );
+              },
+              toBeLessThan(expected) {
+                if (!(actual < expected))
+                  throw new Error(
+                    `Expected ${actual} to be less than ${expected}`
+                  );
+              },
+              toContain(expected) {
+                if (Array.isArray(actual)) {
+                  if (!actual.includes(expected))
+                    throw new Error(
+                      `Expected array to contain ${JSON.stringify(expected)}`
+                    );
+                } else if (typeof actual === 'string') {
+                  if (!actual.includes(expected))
+                    throw new Error(`Expected string to contain "${expected}"`);
+                }
+              },
+              toBeNull() {
+                if (actual !== null)
+                  throw new Error(
+                    `Expected null but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeUndefined() {
+                if (actual !== undefined)
+                  throw new Error(
+                    `Expected undefined but got ${JSON.stringify(actual)}`
+                  );
+              },
+              toBeDefined() {
+                if (actual === undefined)
+                  throw new Error(`Expected value to be defined`);
+              },
+              toBeInstanceOf(expected) {
+                if (!(actual instanceof expected))
+                  throw new Error(`Expected instance of ${expected.name}`);
+              },
+              toThrow() {
+                if (typeof actual !== 'function')
+                  throw new Error('Expected a function');
+                try {
+                  actual();
+                  throw new Error('Expected function to throw');
+                } catch (e) {
+                  if (e.message === 'Expected function to throw') throw e;
+                }
+              },
+              toHaveLength(expected) {
+                if (actual.length !== expected) {
+                  throw new Error(
+                    `Expected length ${expected} but got ${actual.length}`
+                  );
+                }
+              },
+              toBeCloseTo(expected, precision = 2) {
+                const pow = Math.pow(10, precision);
+                if (Math.round(actual * pow) !== Math.round(expected * pow)) {
+                  throw new Error(
+                    `Expected ${actual} to be close to ${expected}`
+                  );
+                }
+              },
+              not: {
+                toBe(expected) {
+                  if (actual === expected)
+                    throw new Error(
+                      `Expected ${JSON.stringify(
+                        actual
+                      )} not to be ${JSON.stringify(expected)}`
+                    );
+                },
+                toEqual(expected) {
+                  if (JSON.stringify(actual) === JSON.stringify(expected)) {
+                    throw new Error(`Expected values not to be equal`);
+                  }
+                },
+                toContain(expected) {
+                  if (Array.isArray(actual) && actual.includes(expected)) {
+                    throw new Error(
+                      `Expected array not to contain ${JSON.stringify(
+                        expected
+                      )}`
+                    );
+                  }
+                  if (typeof actual === 'string' && actual.includes(expected)) {
+                    throw new Error(
+                      `Expected string not to contain "${expected}"`
+                    );
+                  }
+                },
+                toBeNull() {
+                  if (actual === null)
+                    throw new Error('Expected value not to be null');
+                },
+                toBeUndefined() {
+                  if (actual === undefined)
+                    throw new Error('Expected value not to be undefined');
+                },
+                toBeTruthy() {
+                  if (actual)
+                    throw new Error(
+                      `Expected falsy but got ${JSON.stringify(actual)}`
+                    );
+                },
+                toBeFalsy() {
+                  if (!actual)
+                    throw new Error(
+                      `Expected truthy but got ${JSON.stringify(actual)}`
+                    );
+                },
+              },
+            };
+          }
+
+          // Run student code + spec in one shared scope
+          const combined = studentCode + '\n;\n' + specCode;
+          const runner = new Function('describe', 'it', 'expect', combined);
+          runner(describe, it, expect);
+
+          // Collect results
+          let totalPassed = 0;
+          let totalSpecs = 0;
+          const results = [];
+
+          suites.forEach((suite) => {
+            suite.specs.forEach((spec) => {
+              totalSpecs++;
+              if (spec.passed) totalPassed++;
+              results.push({
+                suite: suite.name,
+                name: spec.name,
+                passed: spec.passed,
+                error: spec.error,
+              });
+            });
+          });
+
+          lastResults = {
+            passed: totalPassed,
+            total: totalSpecs,
+            specs: results,
+          };
+          displayResults(lastResults);
+        } catch (err) {
+          showFeedback(`⚠️ Code error: ${err.message}`, 'warning');
+          lastResults = null;
+          document.getElementById('submitBtn').classList.add('hidden');
+        }
+      }
+      // ─── Display results ──────────────────────────────────────
+      function displayResults({ passed, total, specs }) {
+        const area = document.getElementById('resultsArea');
+        area.classList.remove('hidden');
+
+        document.getElementById('passedCount').textContent = passed;
+        document.getElementById('totalCount').textContent = total;
+
+        const pct = total > 0 ? Math.round((passed / total) * 100) : 0;
+        const bar = document.getElementById('resultBar');
+        bar.style.width = `${pct}%`;
+        bar.textContent = `${pct}%`;
+        bar.className = `progress-bar-fill ${
+          pct >= 70
+            ? 'progress-green'
+            : pct >= 40
+            ? 'progress-yellow'
+            : 'progress-red'
+        }`;
+
+        // Individual spec results
+        const specEl = document.getElementById('specResults');
+        specEl.innerHTML = specs
+          .map((s) => {
+            if (s.passed) {
+              return `<div class="spec-result spec-pass">
           <span class="spec-icon">✅</span>
           <span>${s.suite} › ${s.name}</span>
         </div>`;
-        } else {
-          return `<div class="spec-result spec-fail">
+            } else {
+              return `<div class="spec-result spec-fail">
           <span class="spec-icon">❌</span>
           <div>
             <span>${s.suite} › ${s.name}</span>
-            ${s.error ? `<span class="error-msg">${escapeHtml(s.error)}</span>` : ''}
+            ${
+              s.error
+                ? `<span class="error-msg">${escapeHtml(s.error)}</span>`
+                : ''
+            }
           </div>
         </div>`;
-        }
-      }).join('');
-
-      // Show submit button
-      document.getElementById('submitBtn').classList.remove('hidden');
-
-      // Scroll to results
-      area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    // ─── Submit results ────────────────────────────────────────
-    async function submitResults() {
-      if (!lastResults) return;
-
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
-      btn.textContent = '📤 Submitting...';
-
-      try {
-        const res = await fetch('/api/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            studentId,
-            className,
-            day: dayId,
-            passed: lastResults.passed,
-            total: lastResults.total
+            }
           })
-        });
+          .join('');
 
-        const data = await res.json();
+        // Show submit button
+        document.getElementById('submitBtn').classList.remove('hidden');
 
-        // Show immediate feedback
-        const pct = Math.round((lastResults.passed / lastResults.total) * 100);
-        const msgClass = pct === 100 ? 'success' : pct >= 50 ? 'info' : 'warning';
-        showFeedback(data.message, msgClass);
-
-        // Show progress message
-        const progEl = document.getElementById('personalProgress');
-        progEl.classList.remove('hidden');
-        document.getElementById('progressMessage').textContent = data.progressMessage;
-
-        btn.textContent = '✅ Submitted!';
-        setTimeout(() => {
-          btn.textContent = '📤 Re-submit';
-          btn.disabled = false;
-        }, 2000);
-
-      } catch (err) {
-        showFeedback('Failed to submit. Try again.', 'warning');
-        btn.disabled = false;
-        btn.textContent = '📤 Submit Results';
+        // Scroll to results
+        area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
-    }
 
-    // ─── Feedback message ──────────────────────────────────────
-    function showFeedback(text, type = 'info') {
-      const el = document.getElementById('feedbackMessage');
-      el.textContent = text;
-      el.className = `message-box message-${type}`;
-      el.classList.remove('hidden');
-    }
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
 
-    // ─── Boot ──────────────────────────────────────────────────
-    loadChallenge();
-  </script>
-</body>
+      // ─── Submit results ────────────────────────────────────────
+      async function submitResults() {
+        if (!lastResults) return;
 
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = '📤 Submitting...';
+
+        try {
+          const res = await fetch('/api/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              studentId,
+              className,
+              day: dayId,
+              passed: lastResults.passed,
+              total: lastResults.total,
+            }),
+          });
+
+          const data = await res.json();
+
+          // Show immediate feedback
+          const pct = Math.round(
+            (lastResults.passed / lastResults.total) * 100
+          );
+          const msgClass =
+            pct === 100 ? 'success' : pct >= 50 ? 'info' : 'warning';
+          showFeedback(data.message, msgClass);
+
+          // Show progress message
+          const progEl = document.getElementById('personalProgress');
+          progEl.classList.remove('hidden');
+          document.getElementById('progressMessage').textContent =
+            data.progressMessage;
+
+          btn.textContent = '✅ Submitted!';
+          setTimeout(() => {
+            btn.textContent = '📤 Re-submit';
+            btn.disabled = false;
+          }, 2000);
+        } catch (err) {
+          showFeedback('Failed to submit. Try again.', 'warning');
+          btn.disabled = false;
+          btn.textContent = '📤 Submit Results';
+        }
+      }
+
+      // ─── Feedback message ──────────────────────────────────────
+      function showFeedback(text, type = 'info') {
+        const el = document.getElementById('feedbackMessage');
+        el.textContent = text;
+        el.className = `message-box message-${type}`;
+        el.classList.remove('hidden');
+      }
+
+      // ─── Boot ──────────────────────────────────────────────────
+      loadChallenge();
+    </script>
+  </body>
 </html>
