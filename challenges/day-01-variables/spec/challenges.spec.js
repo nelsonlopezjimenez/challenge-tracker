@@ -80,8 +80,8 @@ describe('Challenge 7: charAt', function () {
 });
 describe('Challenge 8: isVowel', function () {
   it('returns true if character is a vowel, false if it is a consonant', function() {
-    expect(charAt('a')).toBe(true);
-    expect(charAt('w', 12)).toBe(false);
+    expect(isVowel('a')).toBe(true);
+    expect(isVowel('w')).toBe(false);
   });
 });
 describe('Challenge 9: isAlt', function () {
