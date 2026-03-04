@@ -29,7 +29,7 @@ function getFullName(first, last) {
 
 }
 // ─── Challenge 6 ─────────────────────────────────────────────
-// Return full name with space between first and second
+// Return a new string which consists of the second string appended to the first string.
 function appendToString(first, second) {
   // your code here
 }
@@ -39,7 +39,7 @@ function charAt(str, index) {
   // your code here
 }
 // ─── Challenge 8 ─────────────────────────────────────────────
-// Return a boolean if the character is a vowel, false if a consonant
+// Return true if the character is a vowel, false if a consonant
 function isVowel(char) {
   // your code here
 }
