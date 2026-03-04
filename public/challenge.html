@@ -9,10 +9,6 @@
     <title>Challenge</title>
     <link
       rel="stylesheet"
-      href="/css/styles.css"
-    />
-    <link
-      rel="stylesheet"
       href="/lib/codemirror/codemirror.css"
     />
     <link
@@ -22,6 +18,10 @@
     <link
       rel="stylesheet"
       href="/lib/jasmine/jasmine.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/css/styles.css"
     />
     <style>
       /* Override Jasmine default styles to fit dark theme */
@@ -35,19 +35,17 @@
     <div class="container wide">
       <!-- Header -->
       <div class="challenge-header">
-        <div>
-          <a
-            href="/"
-            style="font-size: 0.9rem"
-            >← Back to challenges</a
-          >
-          <h1
-            id="challengeTitle"
-            style="margin-top: 0.5rem"
-          >
-            Loading...
-          </h1>
-        </div>
+        <a
+          href="/"
+          style="font-size: 0.9rem"
+          >← Back to challenges</a
+        >
+        <h1
+          id="challengeTitle"
+          style="margin-top: 0.5rem"
+        >
+          Loading...
+        </h1>
         <input
           type="file"
           id="fileInput"
@@ -77,7 +75,7 @@
         </span>
       </div>
 
-      <main>
+      <section id="instructions-editor">
         <!-- Instructions -->
         <div
           id="instructions"
@@ -86,9 +84,12 @@
 
         <!-- Editor -->
         <div class="editor-area">
-          <div id="editorContainer"></div>
+          <div
+            id="editorContainer"
+            style="height: 600px"
+          ></div>
         </div>
-      </main>
+      </section>
 
       <!-- Action buttons -->
       <div class="action-bar">

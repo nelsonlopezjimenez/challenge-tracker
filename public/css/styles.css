@@ -32,10 +32,6 @@ body {
   min-height: 100vh;
 }
 
-main {
-  display: flex;
-}
-
 a {
   color: var(--accent);
   text-decoration: none;
@@ -329,11 +325,7 @@ header p {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
-  height: auto;
-}
-
-#editorContainer {
-  max-height: 600px;
+  height: 600px;
 }
 
 .CodeMirror-scroll {
@@ -422,8 +414,8 @@ header p {
   color: var(--text-muted);
   line-height: 1.7;
   width: 45%;
-  max-height: 600px;
   overflow-y: scroll;
+  max-height: 600px;
 }
 
 .instructions h1,
@@ -593,4 +585,10 @@ header p {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+#instructions-editor {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 2%;
 }
