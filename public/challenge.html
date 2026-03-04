@@ -46,26 +46,50 @@
         >
           Loading...
         </h1>
+        <!-- Action buttons -->
+        <button
+          id="runBtn"
+          class="btn btn-primary"
+          onclick="runTests()"
+        >
+          ▶ Run Tests
+        </button>
+        <button
+          id="submitBtn"
+          class="btn btn-success hidden"
+          onclick="submitResults()"
+        >
+          📤 Submit Results
+        </button>
+
+        <!-- Immediate feedback message -->
+        <div
+          id="feedbackMessage"
+          class="message-box hidden"
+        ></div>
+
         <input
           type="file"
           id="fileInput"
           accept=".js"
           class="hidden"
         />
-        <button
-          class="btn btn-outline"
-          onclick="loadFile()"
-          title="Load from VS Code"
-        >
-          📂 Load File
-        </button>
-        <button
-          class="btn btn-outline"
-          onclick="resetCode()"
-          title="Reset to template"
-        >
-          🔄 Reset
-        </button>
+        <div id="headerBtns">
+          <button
+            class="btn btn-outline"
+            onclick="loadFile()"
+            title="Load from VS Code"
+          >
+            📂 Load File
+          </button>
+          <button
+            class="btn btn-outline"
+            onclick="resetCode()"
+            title="Reset to template"
+          >
+            🔄 Reset
+          </button>
+        </div>
         <span class="id-badge">
           🎭
           <span
@@ -84,36 +108,9 @@
 
         <!-- Editor -->
         <div class="editor-area">
-          <div
-            id="editorContainer"
-            style="height: 600px"
-          ></div>
+          <div id="editorContainer"></div>
         </div>
       </section>
-
-      <!-- Action buttons -->
-      <div class="action-bar">
-        <button
-          id="runBtn"
-          class="btn btn-primary"
-          onclick="runTests()"
-        >
-          ▶ Run Tests
-        </button>
-        <button
-          id="submitBtn"
-          class="btn btn-success hidden"
-          onclick="submitResults()"
-        >
-          📤 Submit Results
-        </button>
-      </div>
-
-      <!-- Immediate feedback message -->
-      <div
-        id="feedbackMessage"
-        class="message-box hidden"
-      ></div>
 
       <!-- Test Results -->
       <div

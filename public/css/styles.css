@@ -42,9 +42,8 @@ a:hover {
 
 /* ─── Layout ───────────────────────────────────────────────── */
 .container {
-  max-width: 1350px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 0.5rem 0.5rem;
 }
 
 header {
@@ -325,7 +324,7 @@ header p {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
-  height: 600px;
+  height: 450px;
 }
 
 .CodeMirror-scroll {
@@ -415,7 +414,7 @@ header p {
   line-height: 1.7;
   width: 45%;
   overflow-y: scroll;
-  max-height: 600px;
+  max-height: 450px;
 }
 
 .instructions h1,
@@ -591,4 +590,14 @@ header p {
   display: flex;
   justify-content: space-evenly;
   gap: 2%;
+}
+
+#headerBtns {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+#headerBtns button {
+  margin: 5px;
 }
